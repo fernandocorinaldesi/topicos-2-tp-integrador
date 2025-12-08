@@ -5,7 +5,6 @@ exports.validateApiKey = (req, res) => {
     // 1. Obtener datos del body (que envía el Gateway)
     const { apiKey, path, method } = req.body;
     
-    // 2. Seguridad entre servicios (Opcional pero recomendado)
     // Verificamos que quien nos llama sea realmente el Gateway
     const gatewaySecret = req.headers['x-service-secret'];
     if (gatewaySecret !== serviceSecret) {
@@ -19,7 +18,6 @@ exports.validateApiKey = (req, res) => {
     debug(`Validando API Key: ${apiKey}`);
 
     // 3. Buscar usuario por API Key
-    // (Aquí harías la consulta a MongoDB: db.users.findOne({ apiKey: apiKey }))
     const user = users.find(u => u.apiKey === apiKey);
 
     // CASO A: Usuario no encontrado
@@ -31,7 +29,7 @@ exports.validateApiKey = (req, res) => {
     }
 
     // CASO B: Validación de permisos (RBAC simple)
-    // Por ahora permitimos todo, pero aquí podrías filtrar por 'path'
+    // Por ahora permitimos todo, pero se podria filtrar por ruta
     const routeAccess = true; 
 
     if (!routeAccess) {
@@ -44,7 +42,6 @@ exports.validateApiKey = (req, res) => {
     }
 
     // CASO C: Éxito (Usuario encontrado y validado)
-    // Devolvemos la info crítica: user_id y subscription (para el Rate Limit del Gateway)
     return res.status(200).json({
         valid: true,
         routeAccess: true,

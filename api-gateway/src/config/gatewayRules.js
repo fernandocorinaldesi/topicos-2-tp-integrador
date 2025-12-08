@@ -6,7 +6,7 @@ const authService = require('../services/auth.service');
 // =================================================================
 const requestLog = new Map();
 
-// Límites definidos por el negocio (TP: Freemium 5, Premium 50) [cite: 28]
+// Límites definidos por el negocio (TP: Freemium 5, Premium 50)
 const LIMITES_RPM = {
   FREEMIUM: 5,
   PREMIUM: 50
@@ -42,8 +42,7 @@ exports.rutaProtegida = async (req, res, next) => {
   const apiKey = req.headers['authorization'];
 
   if (!apiKey) {
-    // Requisito: "Si la API key no se encuentra... deberá ser rechazada" [cite: 9]
-    return res.status(401).json({ error: 'Unauthorized', message: 'Falta el header Authorization con la API Key.' });
+      return res.status(401).json({ error: 'Unauthorized', message: 'Falta el header Authorization con la API Key.' });
   }
   
   try {
@@ -71,7 +70,7 @@ exports.rutaProtegida = async (req, res, next) => {
     // =================================================================
     
     const userId = result.data.user_id; // ID interno del usuario
-    const userPlan = (result.data.subscription || 'FREEMIUM').toUpperCase(); // [cite: 28]
+    const userPlan = (result.data.subscription || 'FREEMIUM').toUpperCase(); 
     
     const limitePermitido = LIMITES_RPM[userPlan] || LIMITES_RPM.FREEMIUM;
     
@@ -81,7 +80,7 @@ exports.rutaProtegida = async (req, res, next) => {
     let timestamps = requestLog.get(userId) || [];
     timestamps = timestamps.filter(ts => now - ts < windowMs);
 
-    // Verificar límite [cite: 27]
+    // Verificar límite
     if (timestamps.length >= limitePermitido) {
         console.warn(`API Gateway :: Límite excedido :: Usuario ${userId} (${userPlan})`);
         
@@ -105,7 +104,7 @@ exports.rutaProtegida = async (req, res, next) => {
 
   } catch (error) {
     console.error(`API Gateway :: Error validando API Key: ${error.message}`);
-    // Si el Auth Service está caído, fallamos seguro (fail closed)
+    // Si el Auth Service está caído
     return res.status(500).json({ error: 'Internal Server Error', message: 'Error validando credenciales.' });
   }
 };

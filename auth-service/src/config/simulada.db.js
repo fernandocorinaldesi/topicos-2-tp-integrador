@@ -1,6 +1,5 @@
 /**
  * Base de datos simulada de usuarios y API Keys.
- * Aquí definimos quién es PREMIUM y quién es FREEMIUM.
  */
 const users = [
     {

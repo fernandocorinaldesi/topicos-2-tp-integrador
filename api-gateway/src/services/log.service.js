@@ -4,7 +4,6 @@ const axios = require('axios');
 const LOG_SERVICE_BASE_URL = process.env.LOG_SERVICE_BASE_URL || 'http://localhost:3003'; // Usar variable de entorno
 
 const borrarInformacionSensible = (objeto) => {
-    // ... tu lógica de borrado de info sensible (sin cambios) ...
     delete objeto.password;
     delete objeto.password_current;
     delete objeto.password_new;
@@ -17,11 +16,11 @@ const borrarInformacionSensible = (objeto) => {
 // Función centralizada para enviar log al servicio externo
 async function sendLogToService(datosLog) {
     try {
-        // Llama al Log Service externo. Se usa un 'fire and forget'.
+        // Llama al Log Service externo.
         // No esperamos la respuesta para no bloquear al cliente.
         axios.post(`${LOG_SERVICE_BASE_URL}/api/v1/log`, datosLog)
             .catch(error => {
-                // Sólo logueamos el error de forma asíncrona
+                // ogueamos el error de forma asíncrona
                 console.error('Error al enviar log al Log Service:', error.message);
             });
     } catch (error) {
@@ -50,15 +49,14 @@ const logProxyReq = async ({ file, req }) => {
             }
         }
     };
-    // No usamos el sendLogToService aquí, solo en la respuesta final
-    // para tener el tiempo total de procesamiento.
+ 
 }
 
 const logProxyRes = async ({ file, req, res, responseBody }) => {
     file = file.replace('.proxy.js', '');
     responseBody = borrarInformacionSensible(responseBody);
     
-    // Calculamos la duración total (CRÍTICO para el TP)
+    // Calculamos la duración total
     const durationMs = req.startTime ? Date.now() - req.startTime : -1;
     
     const datosLog = {
@@ -67,7 +65,7 @@ const logProxyRes = async ({ file, req, res, responseBody }) => {
         tipo: 'res',
         endpoint: req.baseUrl + req.path,
         status: res.statusCode,
-        durationMs: durationMs, // <-- Añadido el tiempo
+        durationMs: durationMs, 
         data: {
             req: {
                 method: req.method,
