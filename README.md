@@ -95,7 +95,7 @@ cd ../log-service && npm install
 
 #### 4- Ejecutar los servicios
 
-Recomendamos abrir 4 terminales distintas para ver los logs de cada servicio en tiempo real. En cada carpeta ejecutar:
+Ejecutar el siguiente comando en cada servicio:
 
 ```bash
 npm run dev
@@ -122,6 +122,14 @@ Para interactuar con la plataforma, utiliza Postman o curl apuntando al Gateway.
   "clinical_notes": "Tos persistente."
 }
 ```
+
+### Integrantes
+
+* **Briant Alcides Gauna**
+* **Agustina Giordano**
+* **Fernando Corinaldesi**
+
+---
 
 ### Contacto
 
