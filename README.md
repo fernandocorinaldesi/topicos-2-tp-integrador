@@ -52,25 +52,22 @@ Detalles generales y de diseño de la App:
   - **Node-cache** (Almacenamiento temporal en memoria).
   - **Mongoose** (Driver para MongoDB).
 
-### Diseño
+### Diseño   
 
-A diferencia de una arquitectura monolítica por capas, aquí dividimos el sistema por **Servicios**.
+La arquitectura se divide en servicios independientes comunicados vía HTTP (REST).
 
-Servicio      | Puerto | Descripción
-\--------------------- | -------------------- | ---------------------  
-**API Gateway** | `8080` | Punto de entrada único. Se encarga del enrutamiento, validación de API Keys y Rate Limiting (5 RPM para Freemium, 50 RPM para Premium).
-**Auth Service** | `3001` | Servicio de identidad. Valida las credenciales y determina el plan de suscripción del usuario.
-**Predict Service** | `3002` | Orquestador principal. Gestiona la caché de predicciones y se comunica con el servicio de IA.
-**Log Service** | `3003` | Servicio de auditoría asíncrono. Registra tiempos de respuesta y eventos en MongoDB.
-**Model Service** | `5000` | (Externo/Python) Contenedor que ejecuta el modelo de Machine Learning y LLM.
-
+| Servicio | Puerto | Responsabilidad Principal |
+| :--- | :---: | :--- |
+| **API Gateway** | `8080` | **Entry Point**. Enrutamiento, Rate Limiting (5/50 RPM) y validación previa. |
+| **Auth Service** | `3001` | **Identidad**. Valida API Keys y determina el plan (Freemium/Premium). |
+| **Predict Service** | `3002` | **Orquestador**. Gestiona la lógica de negocio, Caché y conexión con IA. |
+| **Log Service** | `3003` | **Auditoría**. Registro asíncrono de eventos en MongoDB. |
+| **Model Service** | `5000` | **IA Core**. Contenedor externo (Python) con el modelo de ML/LLM. |
 #### Diagrama de Arquitectura
 
 Flujo de una petición de predicción:
 
 `Cliente` -\> `Gateway` -\> `Auth (Validar)` -\> `Gateway` -\> `Predict (Cache/IA)` -\> `Respuesta` -\> `Log (Async)`
-
-*(Aquí puedes insertar una imagen de tu diagrama si lo deseas)*
 
 ### Despliegue
 
