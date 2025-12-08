@@ -56,26 +56,13 @@ app.use(morgan('combined', { stream: accessLogStream }));
 // =======================================
 // === MIDDLEWARES GENERALES
 // =======================================
-app.use(express.json());
+
 
 // ?? ###### JWT APP LEVEL MIDDLEWARE
 app.use((req, res, next) => {
    next();
 });
 
-// =======================================
-// === CIERRE DE CONEXIÓN MONGO
-// =======================================
-
-// Manejo de cierre de conexión al terminar la aplicación
-process.on('SIGINT', async () => {
-  const { mongoCliente } = require('./db/mongoClient');
-  if (mongoCliente) {
-      await mongoCliente.close();
-      console.log('Conexión a MongoDB cerrada.');
-  }
-  process.exit(0);
-});
 
 // =======================================
 // === GESTIÓN DE ERRORES
