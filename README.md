@@ -123,6 +123,14 @@ Para interactuar con la plataforma, utiliza Postman o curl apuntando al Gateway.
 }
 ```
 
+### Integrantes
+
+* **Briant Alcides Gauna**
+* **Agustina Giordano**
+* **Fernando Corinaldesi**
+
+---
+
 ### Contacto
 
 Puedes enviar un mail a alguna de las siguientes direcciones:
