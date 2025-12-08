@@ -1,54 +1,111 @@
-const debug = require('debug')('api-autorizacion');
+const debug = require('debug')('api-gateway:rules');
 const authService = require('../services/auth.service');
+
+// =================================================================
+// CONFIGURACIÓN DE RATE LIMIT (EN MEMORIA)
+// =================================================================
+const requestLog = new Map();
+
+// Límites definidos por el negocio (TP: Freemium 5, Premium 50) [cite: 28]
+const LIMITES_RPM = {
+  FREEMIUM: 5,
+  PREMIUM: 50
+};
+
+// Limpieza automática de logs viejos (cada 10 min)
+setInterval(() => {
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  for (const [userId, timestamps] of requestLog.entries()) {
+    const validTimestamps = timestamps.filter(ts => now - ts < windowMs);
+    if (validTimestamps.length === 0) {
+      requestLog.delete(userId);
+    } else {
+      requestLog.set(userId, validTimestamps);
+    }
+  }
+}, 10 * 60 * 1000);
 
 exports.rutaSiemprePermitida = (_1, _2, next) => {
   next();
 };
 
 /**
- * @description Lee el token jwt de req.headers.authorization y consulta a api-autorizacion
- * si el usuario tiene permitido el endpoint de req (originalUrl+method).
- * @returns next() si validación ok, next(error) si validación no ok.
+ * Middleware de seguridad principal:
+ * 1. Valida API Key contra Auth Service.
+ * 2. Aplica Rate Limit según el plan devuelto (Freemium/Premium).
  */
 exports.rutaProtegida = async (req, res, next) => {
   
-  // Extraer el token JWT del Authorization header
-  const token = req.headers.authorization?.split(' ')[1];
+  // 1. OBTENER API KEY
+  // Según enunciado: "header HTTP 'Authorization' indicando la API key"
+  const apiKey = req.headers['authorization'];
 
-  if (!token) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (!apiKey) {
+    // Requisito: "Si la API key no se encuentra... deberá ser rechazada" [cite: 9]
+    return res.status(401).json({ error: 'Unauthorized', message: 'Falta el header Authorization con la API Key.' });
   }
   
-  // Verificar si el token tiene habilitado el acceso a path/method
   try {
-    const path = req.originalUrl.slice(1);
+    const path = req.originalUrl; // path completo
     const method = req.method;
 
-    const result = await authService.isEndpointAllowed(token, path, method);
+    // 2. CONSULTAR AL AUTH SERVICE
+    // Le enviamos la apiKey tal cual viene
+    const result = await authService.validarApiKey(apiKey, path, method);
 
-    if (!result.data.jwtValid) {
-      console.warn(`API Gateway :: JWT inválido.`);
-      return res.status(401).json({ resultado: 'Unauthorized', ...result.data });
+    // Si Auth Service dice que la key no existe o es inválida
+    if (!result.data || !result.data.valid) {
+      console.warn(`API Gateway :: API Key inválida: ${apiKey}`);
+      return res.status(401).json({ error: 'Unauthorized', message: 'API Key no válida.' });
     }
 
+    // Si la key existe pero no tiene permisos para esta ruta específica
     if (!result.data.routeAccess) {
-      console.warn(`API Gateway :: Denegado :: Usuario ${result.data.user_id} :: ${method} ${path}.`);
-      return res.status(403).json({ resultado: 'Forbidden', ...result.data });
+      console.warn(`API Gateway :: Acceso denegado :: Usuario ${result.data.user_id}`);
+      return res.status(403).json({ error: 'Forbidden', message: 'No tiene permisos para este recurso.' });
     }
 
-    console.log(`API Gateway :: Permitido :: Usuario ${result.data.user_id} :: ${method} ${path}.`);
+    // =================================================================
+    // 3. LOGICA DE RATE LIMITING (Freemium vs Premium)
+    // =================================================================
+    
+    const userId = result.data.user_id; // ID interno del usuario
+    const userPlan = (result.data.subscription || 'FREEMIUM').toUpperCase(); // [cite: 28]
+    
+    const limitePermitido = LIMITES_RPM[userPlan] || LIMITES_RPM.FREEMIUM;
+    
+    const now = Date.now();
+    const windowMs = 60 * 1000; // 1 minuto
+
+    let timestamps = requestLog.get(userId) || [];
+    timestamps = timestamps.filter(ts => now - ts < windowMs);
+
+    // Verificar límite [cite: 27]
+    if (timestamps.length >= limitePermitido) {
+        console.warn(`API Gateway :: Límite excedido :: Usuario ${userId} (${userPlan})`);
+        
+        res.set('Retry-After', 60);
+        return res.status(429).json({
+            error: 'Too Many Requests',
+            message: `Plan ${userPlan}: Límite de ${limitePermitido} RPM excedido.`
+        });
+    }
+
+    // Si pasa, registramos el uso
+    timestamps.push(now);
+    requestLog.set(userId, timestamps);
+
+    // Inyectamos datos del usuario en la request para que los use el LogService o el Proxy
+    req.user = { id: userId, plan: userPlan };
+
+    console.log(`API Gateway :: OK :: Usuario ${userId} (${userPlan}) :: ${timestamps.length}/${limitePermitido} RPM`);
+    
     return next();
+
   } catch (error) {
-    /** 
-     * @todo Verificar si es un 400 de API Autorización por no enviar los API-Key.
-    */
-    const mensaje = `API Gateway :: Error en el llamado a authService.isEndpointAllowed  ${error.message}.`;
-    console.error(mensaje);
-    debug(mensaje);
-    console.error(`API Gateway:: Req:`);
-    console.error(req);
-    console.error(`API Gateway:: Detalles del error:`);
-    console.error(error);
-    return next(error);
+    console.error(`API Gateway :: Error validando API Key: ${error.message}`);
+    // Si el Auth Service está caído, fallamos seguro (fail closed)
+    return res.status(500).json({ error: 'Internal Server Error', message: 'Error validando credenciales.' });
   }
 };

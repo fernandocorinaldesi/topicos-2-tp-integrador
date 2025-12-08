@@ -1,30 +1,35 @@
-// const encryptService = require('./encrypt')
 const axios = require('axios');
 require('dotenv').config();
 
+const AUTH_URL = process.env.API_AUTORIZACION_BASE_URL || 'http://localhost:3001';
+
 /**
- * Middleware para que API-Gateway consulte a API-Authorization 
- * si el jwt está autorizado a acceder a ese endpoint method-ruta.
- * @todo [1] revisar el tema encriptar la API-Key con cifrado simétrico.
- * @param {json} token 
- * @param {string} path 
- * @returns {json} Resultado que devuelve la API-Authorization
+ * Consulta al Auth Service si la API Key es válida.
  */
-exports.isEndpointAllowed = async (token, path, method) => {
-
-    const result = await axios.post(
-        `${process.env.API_AUTORIZACION_BASE_URL}/auth/validar_acceso`,
-        {
-            token,
-            path,
-            method
-        },
-        {
-            headers: {
-                "X-API-Key": process.env.API_AUTORIZACION_API_KEY,
-                "X-API-User": process.env.API_AUTORIZACION_API_USER
+exports.validarApiKey = async (apiKey, path, method) => {
+    try {
+        // Hacemos POST al servicio de autorización
+        // Enviamos 'apiKey' en el body
+        const response = await axios.post(
+            `${AUTH_URL}/auth/validate`,
+            {
+                apiKey, 
+                path,
+                method
+            },
+            {
+                // Headers internos de seguridad 
+                headers: {
+                    "X-Service-Secret": process.env.AUTH_SERVICE_SECRET || "secreto_interno"
+                }
             }
-        });
-
-    return result;
+        );
+        return response; // axios devuelve la data en response.data
+    } catch (error) {
+        // Manejo de errores si el Auth Service responde 401/403
+        if (error.response) {
+            return error.response;
+        }
+        throw error;
+    }
 }
