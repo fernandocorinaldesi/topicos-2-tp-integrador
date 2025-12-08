@@ -1,6 +1,8 @@
 # Plataforma de Predicción Médica - Microservicios
 
-\<a href="[http://www.unpaz.edu.ar](http://www.unpaz.edu.ar)"\>\<img src="[https://es.wikipedia.org/wiki/Archivo:Logo_UNLP.jpg](https://es.wikipedia.org/wiki/Archivo:Logo_UNLP.jpg)" title="UNLP" alt="UNLP"\>\</a\>
+<a href="http://www.unlp.edu.ar">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Logo_UNLP.jpg/960px-Logo_UNLP.jpg" title="UNLP" alt="UNLP" width="200">
+</a>
 
 # Empezando con TP integrador para Tópicos de Ingeniería de Software 2
 
