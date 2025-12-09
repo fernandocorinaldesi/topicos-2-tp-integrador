@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(cors());
 
 // Rutas
-app.use('/predict', predictRoutes);
+app.use('/', predictRoutes);
 
 // Health check
 app.get('/health', (req, res) => res.send('Predict Service OK'));
