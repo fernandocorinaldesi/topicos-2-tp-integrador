@@ -4,7 +4,7 @@
   <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Logo_UNLP.jpg/960px-Logo_UNLP.jpg" title="UNLP" alt="UNLP" width="200">
 </a>
 
-# Empezando con TP integrador para Tópicos de Ingeniería de Software 2
+# Empezando con TP integrador para Tópicos 2 de Maestría en Ingeniería de Software
 
 ## Tabla de contenidos
 
