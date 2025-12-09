@@ -31,13 +31,16 @@ exports.getPrediction = async (req, res) => {
         
         console.log(`Consultando modelo IA (Plan: ${userPlan})...`);
         
-        // Simulamos la llamada a Python (Reemplazar con la URL real)
-        const responseIA = await axios.post(`${PYTHON_SERVICE_URL}/predict`, patientData, {
+    
+        
+       /*const responseIA = await axios.post(`${PYTHON_SERVICE_URL}/predict`, patientData, {
              // Opcional: pasar params si el servicio Python lo requiere
              params: { mode: userPlan }
         });
         
-        const prediction = responseIA.data;
+        const prediction = responseIA.data;*/
+            // Simulamos la llamada a Python 
+        const prediction = { pneumonia: true, score: 0.85, explanation: "Simulación de IA" };
 
         // 4. Filtrar respuesta según el Plan (Requerimiento del TP)
         // FREEMIUM: Solo true/false y score. PREMIUM: Incluye explicación.
